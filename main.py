@@ -5,8 +5,8 @@ import random
 
 
 # Fenstergröße
-width = 1920
-height = 1080
+width = 800
+height = 800
 
 pygame.init()
 screen = pygame.display.set_mode((width, height))
@@ -45,7 +45,7 @@ def main_game():
 
     # maximale FPS
     clock = pygame.time.Clock()
-    MAX_FPS = 1000
+    MAX_FPS = 60
 
     # Soundeffekte
     pygame.mixer.init()
@@ -162,7 +162,7 @@ def main_game():
                 # Richtung des Projektils
                 direction = math.atan2(mouse_pos[1] - player_pos[1], mouse_pos[0] - player_pos[0])
                 # Geschwindigkeit
-                speed = 3
+                speed = 30
                 # Geschwindigkeit in x- und y-Richtung berechnen
                 velocity = [speed * math.cos(direction), speed * math.sin(direction)]
                 # Hinzufügen des Projektils zur Liste
@@ -190,56 +190,44 @@ def main_game():
                     projectiles.remove(projectile)
 
             # Gegner erstellen
-            if len(enemies) < 6 and anzahl <= 10:
+            if len(enemies) < 5 and anzahl <= 10:
                 spawn_enemy()
-                enemy_speed = 0.15
-                enemy_size = 40
-            if len(enemies) < 7 and anzahl > 20:
-                spawn_enemy()
-                enemy_speed = 0.2
-                enemy_size = 38
-            if len(enemies) < 9 and anzahl >= 50:
-                spawn_enemy()
-                enemy_speed = 0.3
-                enemy_size = 36
-            if len(enemies) < 10 and anzahl >= 100:
-                spawn_enemy()
-                enemy_speed = 0.4
-                enemy_size = 34
-            if len(enemies) < 10 and anzahl >= 200:
-                spawn_enemy()
-                enemy_speed = 0.5
+                enemy_speed = 1
+                enemy_size = 35
+            if len(enemies) < 5 and anzahl <= 25:
+                enemy_speed = 1.25
                 enemy_size = 32
-            if len(enemies) < 10 and anzahl >= 300:
-                spawn_enemy()
-                enemy_speed = 0.61
-                enemy_size = 30
-            if len(enemies) < 10 and anzahl >= 400:
-                spawn_enemy()
-                enemy_speed = 0.72
-                enemy_size = 28
-            if len(enemies) < 10 and anzahl >= 500:
-                spawn_enemy()
-                enemy_speed = 0.83
+            if anzahl > 50:
+                enemy_speed = 1.5
+                enemy_size = 29
+            if anzahl > 100:
+                enemy_speed = 1.75
                 enemy_size = 26
-            if len(enemies) < 10 and anzahl >= 600:
-                spawn_enemy()
-                enemy_speed = 0.94
-                enemy_size = 24
-            if len(enemies) < 10 and anzahl >= 700:
-                spawn_enemy()
-                enemy_speed = 1.05
-                enemy_size = 22
-            if len(enemies) < 10 and anzahl >= 800:
-                spawn_enemy()
-                enemy_speed = 1.16
+            if anzahl > 150:
+                enemy_speed = 2
+                enemy_size = 23
+            if anzahl > 200:
+                enemy_speed = 2.25
                 enemy_size = 20
-            if len(enemies) < 10 and anzahl >= 900:
-                spawn_enemy()
-                enemy_speed = 1.27
-            if len(enemies) < 10 and anzahl >= 1000:
-                spawn_enemy()
-                enemy_speed = 1.38
+            if anzahl > 250:
+                enemy_speed = 2.5
+                enemy_size = 20
+            if anzahl > 300:
+                enemy_speed = 2.75
+                enemy_size = 20
+            if anzahl > 350:
+                enemy_speed = 3
+                enemy_size = 20
+            if anzahl > 400:
+                enemy_speed = 3.25
+                enemy_size = 20
+            if anzahl > 450:
+                enemy_speed = 3.5
+                enemy_size = 20
+            if anzahl > 500:
+                enemy_speed = 3.75
+            if anzahl > 550:
+                enemy_speed = 4
                 enemy_size = 18
 
                 # Gegner zeichnen und bewegen
