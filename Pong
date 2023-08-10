@@ -1,0 +1,104 @@
+import pygame
+import random
+import math
+
+# Initialisierung von Pygame
+pygame.init()
+
+# Fenstergröße
+WIDTH, HEIGHT = 800, 600
+
+# Farben
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
+# Fenster erstellen
+window = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Pong")
+
+# Schläger
+class Paddle(pygame.sprite.Sprite):
+    def __init__(self, x, y, keys):
+        super().__init__()
+        self.image = pygame.Surface((10, 100))
+        self.image.fill(WHITE)
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+        self.speed = 5
+        self.keys = keys  # Tasten zum Steuern des Schlägers
+
+    def update(self):
+        keys = pygame.key.get_pressed()
+        if keys[self.keys[0]]:
+            self.rect.y -= self.speed
+        if keys[self.keys[1]]:
+            self.rect.y += self.speed
+
+# Ball
+class Ball(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.Surface((10, 10))
+        self.image.fill(WHITE)
+        self.rect = self.image.get_rect()
+        self.rect.center = (WIDTH // 2, HEIGHT // 2)
+        self.speed = 5
+        self.angle = random.uniform(-math.pi / 4, math.pi / 4)  # Startwinkel
+
+    def update(self):
+        # Bewegung mit gegebenem Winkel
+        self.rect.x += self.speed * math.cos(self.angle)
+        self.rect.y += self.speed * math.sin(self.angle)
+
+        # Ball-Bounce an Wänden
+        if self.rect.top <= 0 or self.rect.bottom >= HEIGHT:
+            self.angle = -self.angle  # Winkel invertieren bei Wandkontakt
+
+        # Ball-Bounce an Paddles
+        if pygame.sprite.collide_rect(self, player_paddle):
+            self.angle = math.pi - self.angle  # Winkel invertieren bei Kollision mit Spielerpaddle
+            # Anpassung des Winkels abhängig von der Position auf dem Paddle
+            relative_y = player_paddle.rect.centery - self.rect.centery
+            self.angle = (relative_y / (player_paddle.rect.height / 2)) * (math.pi / 4)
+
+        if pygame.sprite.collide_rect(self, enemy_paddle):
+            self.angle = math.pi - self.angle  # Winkel invertieren bei Kollision mit Computergegnerpaddle
+            # Anpassung des Winkels abhängig von der Position auf dem Paddle
+            relative_y = enemy_paddle.rect.centery - self.rect.centery
+            self.angle = (relative_y / (enemy_paddle.rect.height / 2)) * (math.pi / 4) * -8
+
+# Schläger und Ball erstellen
+player_paddle = Paddle(50, HEIGHT // 2, (pygame.K_w, pygame.K_s))
+enemy_paddle = Paddle(WIDTH - 50, HEIGHT // 2, (pygame.K_UP, pygame.K_DOWN))
+ball = Ball()
+
+# Sprites-Gruppen
+all_sprites = pygame.sprite.Group()
+all_sprites.add(player_paddle, enemy_paddle, ball)
+
+# Clock für die Framerate
+clock = pygame.time.Clock()
+
+# Hauptspiel-Schleife
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    # Spiel-Logik
+    all_sprites.update()
+
+    # Ball-Begrenzungen
+    if ball.rect.left <= 0 or ball.rect.right >= WIDTH:
+        ball.rect.center = (WIDTH // 2, HEIGHT // 2)
+
+    # Zeichnen
+    window.fill(BLACK)
+    all_sprites.draw(window)
+    pygame.display.flip()
+
+    # Framerate festlegen
+    clock.tick(60)
+
+pygame.quit()
