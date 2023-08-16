@@ -1,0 +1,205 @@
+import random
+import pygame
+import sys
+
+# Spielfeldgröße
+BOARD_WIDTH = 10
+BOARD_HEIGHT = 20
+
+# Farben
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+CYAN = (0, 255, 255)
+
+# Leeres Spielfeld
+board = [[0] * BOARD_WIDTH for _ in range(BOARD_HEIGHT)]
+
+# Fenstergröße
+WINDOW_WIDTH = 300
+WINDOW_HEIGHT = 600
+BLOCK_SIZE = 30
+
+# Tetris-Teile (Tetrominos)
+tetrominos = [
+    [[1, 1, 1, 1]],              # I-Tetromino
+    [[1, 1, 1], [0, 1, 0]],     # T-Tetromino
+    [[1, 1, 0], [0, 1, 1]],     # Z-Tetromino
+    [[0, 1, 1], [1, 1, 0]],     # S-Tetromino
+    [[1, 1], [1, 1]],           # O-Tetromino
+    [[1, 1, 1], [0, 0, 1]],     # L-Tetromino
+    [[1, 1, 1], [1, 0, 0]]      # J-Tetromino
+]
+
+# Funktion zum Zufälligen Auswählen eines Tetrominos
+def get_random_tetromino():
+    return random.choice(tetrominos)
+
+
+# Funktion zum Zeichnen des Spielfelds und Tetrominos
+def draw_board(screen, board, tetromino, tetromino_row, tetromino_col):
+    screen.fill(BLACK)
+
+    for row in range(BOARD_HEIGHT):
+        for col in range(BOARD_WIDTH):
+            if (row, col) in tetromino_positions(tetromino, tetromino_row, tetromino_col):
+                pygame.draw.rect(screen, CYAN, (col * BLOCK_SIZE, row * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE))
+            elif board[row][col] == 1:
+                pygame.draw.rect(screen, WHITE, (col * BLOCK_SIZE, row * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE))
+
+    pygame.display.flip()
+
+
+# Funktion zur Berechnung der aktuellen Positionen des Tetrominos
+def tetromino_positions(tetromino, row, col):
+    positions = []
+    for r in range(len(tetromino)):
+        for c in range(len(tetromino[0])):
+            if tetromino[r][c] == 1:
+                positions.append((row + r, col + c))
+    return positions
+
+# Funktion zur Überprüfung auf Kollisionen
+def check_collision(board, tetromino, tetromino_row, tetromino_col):
+    for row, col in tetromino_positions(tetromino, tetromino_row, tetromino_col):
+        if row >= BOARD_HEIGHT or col < 0 or col >= BOARD_WIDTH or board[row][col] == 1:
+            return True
+    return False
+
+# Zeitintervall für die automatische Bewegung nach unten (in Sekunden)
+AUTO_MOVE_DOWN_INTERVAL = 0.5
+
+# Zeitintervall für die horizontale Bewegung (in Sekunden)
+HORIZONTAL_MOVE_INTERVAL = 0.5
+
+ROTATE_INTERVAL = 0.18  # Mindestzeit zwischen zwei Drehungen in Sekunden
+DOWN_INTERVAL = 0.5    # Intervall für Tastendruck nach unten in Sekunden
+
+# Funktion zum Überprüfen und Löschen vollständiger Reihen
+def check_and_clear_lines(board):
+    lines_to_clear = []
+    for row in range(BOARD_HEIGHT):
+        if all(board[row][col] == 1 for col in range(BOARD_WIDTH)):
+            lines_to_clear.append(row)
+
+    for row in lines_to_clear:
+        del board[row]
+        board.insert(0, [0] * BOARD_WIDTH)
+
+
+# Farben definieren
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+GRAY = (100, 100, 100)
+
+
+# Funktion zum Zeichnen des Spielfelds
+def draw_board(screen, board, current_tetromino, current_row, current_col):
+    screen.fill(BLACK)  # Hintergrund schwarz
+
+    # Zeichne das Gitter
+    for row in range(BOARD_HEIGHT):
+        for col in range(BOARD_WIDTH):
+            pygame.draw.rect(screen, GRAY, (col * BLOCK_SIZE, row * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE), 1)
+            if board[row][col] == 1:
+                pygame.draw.rect(screen, WHITE, (col * BLOCK_SIZE, row * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE))
+
+    # Zeichne das aktuelle Tetromino
+    for row, col in tetromino_positions(current_tetromino, current_row, current_col):
+        pygame.draw.rect(screen, WHITE, (col * BLOCK_SIZE, row * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE))
+
+    pygame.display.update()
+
+
+# Funktion zum Drehen der Tetrominos im Uhrzeigersinn
+def rotate_tetromino(tetromino):
+    return list(zip(*reversed(tetromino)))
+
+
+# Hauptfunktion
+def main():
+    pygame.init()
+    screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+    pygame.display.set_caption("Tetris")
+
+    clock = pygame.time.Clock()
+    auto_move_down_time = 0
+    horizontal_move_time = 0
+    last_rotate_time = 0  # Letzte Zeit, zu der das Tetromino gedreht wurde
+    last_down_time = 0  # Letzte Zeit, zu der die Taste nach unten gedrückt wurde
+
+    current_tetromino = get_random_tetromino()
+    current_tetromino_row = 0
+    current_tetromino_col = BOARD_WIDTH // 2 - len(current_tetromino[0]) // 2
+
+    down_pressed = False
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            new_col = current_tetromino_col - 1
+            if not check_collision(board, current_tetromino, current_tetromino_row, new_col):
+                current_tetromino_col = new_col
+                horizontal_move_time = pygame.time.get_ticks() / 1000.0
+        elif keys[pygame.K_RIGHT]:
+            new_col = current_tetromino_col + 1
+            if not check_collision(board, current_tetromino, current_tetromino_row, new_col):
+                current_tetromino_col = new_col
+                horizontal_move_time = pygame.time.get_ticks() / 1000.0
+
+        current_time = pygame.time.get_ticks() / 1000.0
+        if keys[pygame.K_DOWN]:
+            if current_time - last_down_time >= DOWN_INTERVAL:
+                last_down_time = current_time
+                down_pressed = True
+                new_row = current_tetromino_row + 1
+                while not check_collision(board, current_tetromino, new_row, current_tetromino_col):
+                    new_row += 1
+                current_tetromino_row = new_row - 1
+
+                for row, col in tetromino_positions(current_tetromino, current_tetromino_row, current_tetromino_col):
+                    board[row][col] = 1
+                check_and_clear_lines(board)
+                current_tetromino = get_random_tetromino()
+                current_tetromino_row = 0
+                current_tetromino_col = BOARD_WIDTH // 2 - len(current_tetromino[0]) // 2
+                auto_move_down_time = current_time
+        else:
+            down_pressed = False
+            if current_time - auto_move_down_time >= AUTO_MOVE_DOWN_INTERVAL:
+                new_row = current_tetromino_row + 1
+                if not check_collision(board, current_tetromino, new_row, current_tetromino_col):
+                    current_tetromino_row = new_row
+                else:
+                    for row, col in tetromino_positions(current_tetromino, current_tetromino_row,
+                                                        current_tetromino_col):
+                        board[row][col] = 1
+                    check_and_clear_lines(board)
+                    current_tetromino = get_random_tetromino()
+                    current_tetromino_row = 0
+                    current_tetromino_col = BOARD_WIDTH // 2 - len(current_tetromino[0]) // 2
+                auto_move_down_time = current_time
+
+        if keys[pygame.K_SPACE]:
+            if current_time - last_rotate_time >= ROTATE_INTERVAL:
+                new_tetromino = rotate_tetromino(current_tetromino)
+                if not check_collision(board, new_tetromino, current_tetromino_row, current_tetromino_col):
+                    current_tetromino = new_tetromino
+                last_rotate_time = current_time
+
+        if down_pressed and current_time - horizontal_move_time >= HORIZONTAL_MOVE_INTERVAL:
+            new_col = current_tetromino_col + 1
+            if not check_collision(board, current_tetromino, current_tetromino_row, new_col):
+                current_tetromino_col = new_col
+                horizontal_move_time = current_time
+
+        draw_board(screen, board, current_tetromino, current_tetromino_row, current_tetromino_col)
+        clock.tick(10)  # Ändere diese Geschwindigkeit, um das Spiel zu beschleunigen oder zu verlangsamen
+
+
+if __name__ == "__main__":
+    main()
